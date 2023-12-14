@@ -1,11 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 
 export const Upichecker = () => {
-  dummyData = [
-    9876543210, 8765432109, 7654321098, 6543210987, 5432109876, 4321098765,
-    3210987654, 2109876543, 1098765432, 9870123456,
-  ];
-
   const [upiId, setUpiId] = useState("");
 
   const handleChange = (e) => {
