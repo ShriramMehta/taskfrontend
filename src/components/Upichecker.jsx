@@ -1,16 +1,98 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import FraudulentUpiTable from "./FraudulentUpiTable";
+import SuccessfulTransactionTable from "./SuccessfulTransactionTable";
+import AddTransactionForm from "./AddTransactionForm";
+import AddFraudulentUpiForm from "./AddFraudulentUpiForm";
+import toast from "react-hot-toast";
+import commonService from "../services/all_services";
 export const Upichecker = () => {
-  const [upiId, setUpiId] = useState("");
+  const [render, setRender] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [fraudulentUpis, setFraudulentUpis] = useState([]);
+  const [successfulTransactions, setSuccessfulTransactions] = useState([]);
 
-  const handleChange = (e) => {
-    setUpiId(e.target.value);
+  const handleAddTransaction = async (newTransaction) => {
+    try {
+      const response = await commonService.addtTxn({
+        upiId: newTransaction.upiId,
+        senderName: newTransaction.senderName,
+        transactionId: newTransaction.transactionId,
+      });
+      if (response?.data?.success) {
+        toast.success("Added Transaction");
+        setRender((prev) => !prev);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error(`Error adding transaction: ${error.message}`);
+      toast.error("An error occurred while processing the transaction.");
+    }
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const successfulResponse = await fetch(
+          "http://localhost:5000/api/payment/get-all-successful-transactions"
+        );
+        const successfulData = await successfulResponse.json();
+        setSuccessfulTransactions(successfulData.successfulTransactions);
 
-  const handleSubmit = () => {};
+        const fraudulentResponse = await fetch(
+          "http://localhost:5000/api/fraudulent/get-all-fraudulent-upis"
+        );
+        const fraudulentData = await fraudulentResponse.json();
+        setFraudulentUpis(fraudulentData.fraudulentUpis);
+      } catch (error) {
+        console.error(`Error fetching data: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [render]);
+  const handleAddFraudulentUpi = async (newFraudulentUpi) => {
+    try {
+      const response = await commonService.addUPI(newFraudulentUpi);
+      console.log(response);
+      if (response?.data?.success) {
+        toast.success("Added UPI");
+        setRender((prev) => !prev);
+      } else {
+        console.log(error);
+        toast.error("Fraudulent UPI exists");
+      }
+    } catch (error) {
+      toast.error("Fraudulent UPI exists");
+
+      return false; // Indicate failure to keep the form field filled
+    }
+  };
   return (
     <div>
-      <div className="bg-blue-200 sm:w-1/2 w-f h-full sm:mx-auto -mx-8 rounded-md shadow-lg">
+      {loading ? (
+        // Render a spinner or loading indicator while data is being fetched
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <div className="container mx-auto p-8">
+          <AddTransactionForm onAddTransaction={handleAddTransaction} />
+          <AddFraudulentUpiForm onAddFraudulentUpi={handleAddFraudulentUpi} />
+
+          <FraudulentUpiTable fraudulentUpis={fraudulentUpis} />
+          <SuccessfulTransactionTable
+            successfulTransactions={successfulTransactions}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+{
+  /* <div className="bg-blue-200 sm:w-1/2 w-f h-full sm:mx-auto -mx-8 rounded-md shadow-lg">
         <p className="text-2xl font-semibold pt-3">UPI Checker</p>
         <p className="mt-3">
           Enter the UPI ID to check and detect the fradulent IDs.
@@ -35,7 +117,5 @@ export const Upichecker = () => {
             Submit
           </button>
         </div>
-      </div>
-    </div>
-  );
-};
+      </div> */
+}

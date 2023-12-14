@@ -1,5 +1,8 @@
 import React from "react";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import commonService from "../services/all_services";
+import { useNavigate } from "react-router-dom";
 
 export const Signup = () => {
   const [formData, setFromData] = useState({
@@ -7,6 +10,7 @@ export const Signup = () => {
     email: "",
     password: "",
   });
+  const handleNavigate = useNavigate();
 
   const handleChange = (e) => {
     setFromData({
@@ -15,12 +19,26 @@ export const Signup = () => {
     });
   };
 
-  const handleSubmit = ()=>{
-    console.log(formData.name)
-    console.log(formData.email)
-    console.log(formData.password)
-  };
+  const handleSubmit = async () => {
+    try {
+      const response = await commonService.signUpUser({
+        email: formData.email,
+        password: formData.password,
+        username: formData.name,
+      });
+      console.log(response);
+      if (response?.data?.success) {
+        toast.success("Signup successful. Login with provided credentials");
 
+        handleNavigate("/");
+      } else {
+        toast.error("user existss");
+      }
+    } catch (error) {
+      console.error(`Error signing up: ${error.message}`);
+      toast.error("An error occurred while signing up.");
+    }
+  };
   return (
     <div>
       <div className="bg-blue-200 sm:w-1/2 w-f h-full sm:mx-auto -mx-8 rounded-md shadow-lg">
@@ -62,7 +80,10 @@ export const Signup = () => {
           />
         </div>
         <div>
-          <button className="bg-white rounded-lg px-3 py-3 mt-3 mb-3 hover:bg-slate-200 w-20" onClick={handleSubmit}>
+          <button
+            className="bg-white rounded-lg px-3 py-3 mt-3 mb-3 hover:bg-slate-200 w-20"
+            onClick={handleSubmit}
+          >
             Submit
           </button>
         </div>

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { ForgotPassword } from "./ForgotPassword";
+import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import Button from "./Button";
+import commonService from "../services/all_services";
 
 export const Login = () => {
   const [visible, setvisible] = useState(false);
@@ -10,20 +12,41 @@ export const Login = () => {
   const [isInputPassword, setIsInputPassword] = useState(false);
 
   const [loginForm, setLoginState] = useState({
-    userId: "",
+    email: "",
     password: "",
   });
+  const [loadingStates, setLoadingStates] = useState({
+    isSignInLoading: false,
+  });
+  const changeLoadingStates = (name, value) => {
+    setLoadingStates((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleNavigate = useNavigate();
+  const handleSubmit = async () => {
+    try {
+      changeLoadingStates("isSignInLoading", true);
+      const response = await commonService.loginUser({
+        email: loginForm.email,
+        password: loginForm.password,
+      });
+      toast.success("Login successful");
+      console.log(response);
+      if (response?.data?.success) {
+        changeLoadingStates("isSignInLoading", false);
+        localStorage.setItem("project_user", JSON.stringify(response?.data));
 
+        handleNavigate("/upichecker");
+      }
+    } catch (error) {
+      console.error(`Error signing in: ${error.message}`);
+      toast.error("An error occurred while signing in.");
+    }
+  };
   const handleChange = (e) => {
     setLoginState({
       ...loginForm,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleSubmit = () => {
-    console.log(loginForm.userId);
-    console.log(loginForm.password);
   };
 
   return (
@@ -39,14 +62,14 @@ export const Login = () => {
           <div className="group">
             <label
               className={`absolute group-hover:text-xs group-hover:absolute group-hover:mt-2 ml-2 font-light
-               ${isInputFocused || loginForm.userId ? "mt-2 text-xs" : "mt-9"}`}
+               ${isInputFocused || loginForm.email ? "mt-2 text-xs" : "mt-9"}`}
             >
               Please enter your Email
             </label>
             <input
-              value={loginForm.userId}
-              type="text"
-              name="userId"
+              value={loginForm.email}
+              type="email"
+              name="email"
               className="w-4/5 bg-transparent px-2 py-1 border border-solid rounded-sm border-white mx-auto mt-8 mb-8"
               placeholder=""
               onChange={handleChange}
@@ -77,26 +100,20 @@ export const Login = () => {
               onBlur={() => setIsInputPassword(false)}
             />
           </div>
-          <div className="-mt-2 ml-36 mb-4">
-            <Link to="/forgotpassword" className="text-xs underline">
-              Forgot Password?
-            </Link>
-          </div>
+
           <div>
-            <button
-              type="submit"
-              className="w-4/5 bg-textred text-textwhite py-2 px-4 rounded-md mx-auto mb-3 bg-white hover:bg-slate-100 "
+            <Button
               onClick={handleSubmit}
+              loading={loadingStates.isSignInLoading}
             >
-              Login
-            </button>
+              Sign In
+            </Button>
           </div>
           <div className="mx-auto pb-4">
             <Link to="/signup" className="text-xs underline">
               New User?Please Sign Up!
             </Link>
           </div>
-        
         </div>
       </div>
     </div>
