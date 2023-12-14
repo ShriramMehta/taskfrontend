@@ -2,7 +2,7 @@ import "./App.css";
 import { ForgotPassword } from "./components/ForgotPassword";
 import { Route, Routes } from "react-router-dom";
 import { Signup } from "./components/Signup";
-import { Upichecker } from "./components/upichecker";
+import { Upichecker } from "./components/Upichecker";
 
 function App() {
   return (
